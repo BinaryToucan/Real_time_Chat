@@ -3,13 +3,13 @@ package chat.controller;
 import chat.enums.MessageType;
 import chat.message.ChatMessage;
 import chat.service.ChatMessageService;
-import chat.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,18 +25,30 @@ public class ChatController {
     }
 
     @Autowired
-    private ChatMessageService service;
+    private ChatMessageService chatService;
 
     @MessageMapping("/chat.send")
-    public void sendMessage(ChatMessage message) {
+    public void sendMessage(
+            ChatMessage message,
+            Principal principal) {
 
         message.setTimestamp(LocalDateTime.now());
 
-        service.save(message);
+        chatService.save(message);
 
         if (message.getType() == MessageType.PRIVATE) {
+            //System.out.println(principal.getName());
+
+            // сообщение получателю
             messagingTemplate.convertAndSendToUser(
                     message.getReceiver(),
+                    "/queue/messages",
+                    message
+            );
+
+            // сообщение отправителю
+            messagingTemplate.convertAndSendToUser(
+                    message.getSender(),
                     "/queue/messages",
                     message
             );
@@ -45,7 +57,6 @@ public class ChatController {
             messagingTemplate.convertAndSend("/topic/public", message);
         }
     }
-
 
     @MessageMapping("/chat.history")
     @SendTo("/topic/history")

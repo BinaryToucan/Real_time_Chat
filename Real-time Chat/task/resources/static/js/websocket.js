@@ -44,41 +44,7 @@ export function connect() {
             console.log("/queue/messages")
             const msg = JSON.parse(message.body);
 
-            if (msg.sender === state.currentChat) {
-                showMessage(msg);
-            }
+            showMessage(msg);
         });
-
-        // ----------------------- временное решение ---------------------------
-        stompClient.subscribe("/topic/private", function (message) {
-            console.log("псевдо /queue/messages")
-            const msg = JSON.parse(message.body);
-
-            if(state.username != msg.receiver && state.username != msg.sender) return;
-
-            const otherUser =
-                 msg.sender === state.username ? msg.receiver : msg.sender;
-
-            if (!state.usersState.get(otherUser)) {
-                state.usersState.set(otherUser, {
-                    unread: 0,
-                    lastMessageTime: 0
-                });
-            }
-            if (state.currentChat !== otherUser) {
-                state.usersState.get(otherUser).unread++;
-            }
-
-            state.usersState.get(otherUser).lastMessageTime = Date.now();
-
-            renderUsers(state.usersState);
-
-            // показывать ли сообщение
-            if (msg.sender === state.currentChat && msg.receiver === state.username ||
-            msg.sender === state.username && msg.receiver === state.currentChat) {
-                showMessage(msg);
-            }
-        });
-        // --------------------------------------------------------------------
     });
 }
