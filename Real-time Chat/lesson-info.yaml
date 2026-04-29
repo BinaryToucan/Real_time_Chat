@@ -1,0 +1,10 @@
+type: framework
+content:
+  - Chat page
+  - Single chat
+  - Group chat
+  - Login and extended messages
+  - Online users
+  - Switch between chats
+  - Private messages
+  - Improved user list
